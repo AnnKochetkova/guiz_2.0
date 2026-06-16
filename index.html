@@ -1420,7 +1420,11 @@
         function saveData() {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            } catch (e) { /* ignore */ }
+                console.log("Сохранено");
+            } catch (e) {
+                console.error("Ошибка localStorage:", e);
+                alert("Ошибка сохранения: " + e.message);
+            }
         }
 
         function loadData() {
