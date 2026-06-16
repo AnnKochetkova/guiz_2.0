@@ -1711,7 +1711,18 @@
             editCorrect.value = q.correct || '';
             editImageUrl.value = q.image || '';
             editVideo.value = q.video || '';
-            imageFileName.textContent = q.image && q.image.startsWith('data:') ? '📷 (загружено)' : 'Выбрать файл';
+            
+            // Показываем статус загрузки изображения
+            if (q.image && q.image.startsWith('data:')) {
+                imageFileName.textContent = '📷 (загружено)';
+            } else if (q.image && q.image.trim()) {
+                imageFileName.textContent = '🔗 (ссылка)';
+            } else {
+                imageFileName.textContent = 'Выбрать файл';
+            }
+            
+            console.log("📸 Загружено в редактор. Изображение есть:", q.image ? "ДА" : "НЕТ");
+            
             currentCell.catIdx = catIdx;
             currentCell.valIdx = valIdx;
             renderMiniGrid();
@@ -1725,8 +1736,8 @@
             const correct = editCorrect.value.trim();
             const image = editImageUrl.value.trim();
             const video = editVideo.value.trim();
-            console.log("Сохраняю изображение:");
-            console.log(image.substring(0,100));
+
+            console.log("📸 Сохраняю изображение. Длина данных:", image.length);
 
             if (!text && !correct && options.every(o => !o) && !image && !video) {
                 setQuestion(catIdx, valIdx, null);
@@ -1741,10 +1752,10 @@
                 video,
                 played: false,
             };
-            console.log(q);
             const existing = getQuestion(catIdx, valIdx);
             if (existing && existing.played) q.played = true;
             setQuestion(catIdx, valIdx, q);
+            console.log("✅ Вопрос сохранен, изображение есть:", q.image ? "ДА" : "НЕТ");
         }
 
         function openEditor(catIdx, valIdx) {
