@@ -1844,9 +1844,6 @@
             qsReveal.classList.remove('hidden');
             qsCorrectText.textContent = q.correct || 'Правильный ответ не указан';
 
-            // ============================================================
-            //  ПОКАЗ ИЗОБРАЖЕНИЯ (ИСПРАВЛЕННАЯ ЛОГИКА)
-            // ============================================================
             const mediaContainer = qsMedia;
             mediaContainer.innerHTML = '';
 
@@ -1873,10 +1870,10 @@
                 iframe.style.borderRadius = '12px';
                 mediaContainer.appendChild(iframe);
             }
-            // Проверяем ИЗОБРАЖЕНИЕ
+            // Проверяем ИЗОБРАЖЕНИЕ (ТОЛЬКО ЭТОТ БЛОК!)
             else if (q.image && q.image.trim()) {
                 const imageData = q.image.trim();
-                console.log("📸 Пытаюсь загрузить изображение:", imageData.substring(0, 100) + "...");
+                console.log("📸 Пытаюсь загрузить изображение, длина:", imageData.length);
                 
                 const img = document.createElement('img');
                 img.src = imageData;
@@ -1890,7 +1887,6 @@
 
                 img.onload = function() {
                     console.log('✅ Изображение загружено успешно');
-                    mediaContainer.appendChild(img);
                 };
 
                 img.onerror = function() {
@@ -1901,11 +1897,10 @@
                     fallback.style.padding = '1rem';
                     fallback.style.background = 'rgba(255,0,0,0.1)';
                     fallback.style.borderRadius = '8px';
-                    fallback.textContent = '⚠️ Не удалось загрузить изображение. Попробуйте загрузить заново.';
+                    fallback.textContent = '⚠️ Не удалось загрузить изображение';
                     mediaContainer.appendChild(fallback);
                 };
 
-                // Добавляем изображение сразу
                 mediaContainer.appendChild(img);
             }
             // Если нет ни видео, ни изображения
