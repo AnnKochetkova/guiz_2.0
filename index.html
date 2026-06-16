@@ -719,6 +719,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
         }
         .qs-answer-reveal .answer-media img {
             max-width: 100%;
@@ -726,6 +727,14 @@
             border-radius: 12px;
             object-fit: contain;
             display: block;
+        }
+        .qs-answer-reveal .answer-media iframe {
+            max-width: 100%;
+            border-radius: 12px;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            max-height: 50vh;
+            border: none;
         }
 
         .qs-actions {
@@ -1420,10 +1429,8 @@
         function saveData() {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                console.log("Сохранено");
             } catch (e) {
-                console.error("Ошибка localStorage:", e);
-                alert("Ошибка сохранения: " + e.message);
+                console.error("Ошибка сохранения:", e);
             }
         }
 
@@ -1711,7 +1718,6 @@
             editImageUrl.value = q.image || '';
             editVideo.value = q.video || '';
             
-            // Показываем статус загрузки изображения
             if (q.image && q.image.startsWith('data:')) {
                 imageFileName.textContent = '📷 (загружено)';
             } else if (q.image && q.image.trim()) {
@@ -1719,8 +1725,6 @@
             } else {
                 imageFileName.textContent = 'Выбрать файл';
             }
-            
-            console.log("📸 Загружено в редактор. Изображение есть:", q.image ? "ДА" : "НЕТ");
             
             currentCell.catIdx = catIdx;
             currentCell.valIdx = valIdx;
@@ -1735,8 +1739,6 @@
             const correct = editCorrect.value.trim();
             const image = editImageUrl.value.trim();
             const video = editVideo.value.trim();
-
-            console.log("📸 Сохраняю изображение. Длина данных:", image.length);
 
             if (!text && !correct && options.every(o => !o) && !image && !video) {
                 setQuestion(catIdx, valIdx, null);
@@ -1754,7 +1756,6 @@
             const existing = getQuestion(catIdx, valIdx);
             if (existing && existing.played) q.played = true;
             setQuestion(catIdx, valIdx, q);
-            console.log("✅ Вопрос сохранен, изображение есть:", q.image ? "ДА" : "НЕТ");
         }
 
         function openEditor(catIdx, valIdx) {
@@ -1821,8 +1822,44 @@
                 optContainer.appendChild(btn);
             });
 
+            // ============================================================
+            //  ПОКАЗ ФОТО СРАЗУ НА ЭКРАНЕ ВОПРОСА
+            // ============================================================
+            const mediaContainer = qsMedia;
+            mediaContainer.innerHTML = '';
+
+            if (q.image && q.image.trim()) {
+                const imageData = q.image.trim();
+                console.log("📸 Показываю фото на экране вопроса, длина:", imageData.length);
+                
+                const img = document.createElement('img');
+                img.src = imageData;
+                img.alt = 'Изображение к вопросу';
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '40vh';
+                img.style.borderRadius = '12px';
+                img.style.objectFit = 'contain';
+                img.style.display = 'block';
+                img.style.margin = '10px auto';
+                
+                img.onload = function() {
+                    console.log('✅ Фото показано на экране вопроса');
+                };
+                
+                img.onerror = function() {
+                    console.error('❌ Ошибка загрузки фото');
+                    mediaContainer.innerHTML = '';
+                    const fallback = document.createElement('div');
+                    fallback.style.color = '#ff6b6b';
+                    fallback.style.padding = '0.5rem';
+                    fallback.textContent = '⚠️ Фото не загрузилось';
+                    mediaContainer.appendChild(fallback);
+                };
+                
+                mediaContainer.appendChild(img);
+            }
+
             qsReveal.classList.add('hidden');
-            qsMedia.innerHTML = '';
             qsCorrectText.textContent = '';
 
             qsShowAnswerBtn.textContent = '📢 Показать ответ';
@@ -1837,7 +1874,7 @@
             document.querySelectorAll('.qs-actions .btn-score').forEach(el => el.remove());
         }
 
-                function revealAnswer(catIdx, valIdx) {
+        function revealAnswer(catIdx, valIdx) {
             if (questionRevealed) return;
             const q = getQuestion(catIdx, valIdx);
             if (!q) return;
@@ -1849,9 +1886,8 @@
             qsCorrectText.textContent = q.correct || 'Правильный ответ не указан';
 
             const mediaContainer = qsMedia;
-            mediaContainer.innerHTML = '';
 
-            // Проверяем ВИДЕО
+            // Проверяем ВИДЕО (если есть, добавляем после фото)
             if (q.video && q.video.trim()) {
                 const url = q.video.trim();
                 let embedUrl = url;
@@ -1873,47 +1909,6 @@
                 iframe.style.border = 'none';
                 iframe.style.borderRadius = '12px';
                 mediaContainer.appendChild(iframe);
-            }
-            // Проверяем ИЗОБРАЖЕНИЕ (ТОЛЬКО ЭТОТ БЛОК!)
-            else if (q.image && q.image.trim()) {
-                const imageData = q.image.trim();
-                console.log("📸 Пытаюсь загрузить изображение, длина:", imageData.length);
-                
-                const img = document.createElement('img');
-                img.src = imageData;
-                img.alt = 'Изображение к вопросу';
-                img.style.maxWidth = '100%';
-                img.style.maxHeight = '50vh';
-                img.style.borderRadius = '12px';
-                img.style.objectFit = 'contain';
-                img.style.display = 'block';
-                img.style.margin = '0 auto';
-
-                img.onload = function() {
-                    console.log('✅ Изображение загружено успешно');
-                };
-
-                img.onerror = function() {
-                    console.error('❌ Ошибка загрузки изображения');
-                    mediaContainer.innerHTML = '';
-                    const fallback = document.createElement('div');
-                    fallback.style.color = '#ff6b6b';
-                    fallback.style.padding = '1rem';
-                    fallback.style.background = 'rgba(255,0,0,0.1)';
-                    fallback.style.borderRadius = '8px';
-                    fallback.textContent = '⚠️ Не удалось загрузить изображение';
-                    mediaContainer.appendChild(fallback);
-                };
-
-                mediaContainer.appendChild(img);
-            }
-            // Если нет ни видео, ни изображения
-            else {
-                const placeholder = document.createElement('div');
-                placeholder.style.color = '#666';
-                placeholder.style.padding = '0.5rem';
-                placeholder.textContent = '📷 Нет изображения';
-                mediaContainer.appendChild(placeholder);
             }
 
             q.played = true;
@@ -2374,7 +2369,7 @@
 
             console.log('🎯 Своя игра загружена!');
             console.log('📊 Данные:', data);
-            console.log('📸 Поддерживается вставка фото через Ctrl+V и перетаскивание');
+            console.log('📸 Фото показывается на экране вопроса');
         }
 
         init();
