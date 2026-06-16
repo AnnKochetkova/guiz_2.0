@@ -1827,7 +1827,7 @@
             document.querySelectorAll('.qs-actions .btn-score').forEach(el => el.remove());
         }
 
-        function revealAnswer(catIdx, valIdx) {
+                function revealAnswer(catIdx, valIdx) {
             if (questionRevealed) return;
             const q = getQuestion(catIdx, valIdx);
             if (!q) return;
@@ -1838,75 +1838,77 @@
             qsReveal.classList.remove('hidden');
             qsCorrectText.textContent = q.correct || 'Правильный ответ не указан';
 
+            // ============================================================
+            //  ПОКАЗ ИЗОБРАЖЕНИЯ (ИСПРАВЛЕННАЯ ЛОГИКА)
+            // ============================================================
             const mediaContainer = qsMedia;
-            mediaContainer.innerHTML = ''; 
+            mediaContainer.innerHTML = '';
+
+            // Проверяем ВИДЕО
             if (q.video && q.video.trim()) {
-
                 const url = q.video.trim();
-            
                 let embedUrl = url;
-            
                 if (url.includes('youtu.be/')) {
-            
                     const id = url.split('youtu.be/')[1]?.split('?')[0];
-            
-                    if (id)
-                        embedUrl =
-                            'https://www.youtube.com/embed/' + id;
-            
-                }
-                else if (url.includes('watch?v=')) {
-            
+                    if (id) embedUrl = 'https://www.youtube.com/embed/' + id;
+                } else if (url.includes('watch?v=')) {
                     const id = url.split('v=')[1]?.split('&')[0];
-            
-                    if (id)
-                        embedUrl =
-                            'https://www.youtube.com/embed/' + id;
-            
+                    if (id) embedUrl = 'https://www.youtube.com/embed/' + id;
+                } else if (url.includes('/embed/')) {
+                    embedUrl = url;
                 }
-            
-                const iframe =
-                    document.createElement('iframe');
-            
+                const iframe = document.createElement('iframe');
                 iframe.src = embedUrl;
-            
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
                 iframe.allowFullscreen = true;
-            
+                iframe.style.width = '100%';
+                iframe.style.aspectRatio = '16/9';
+                iframe.style.border = 'none';
+                iframe.style.borderRadius = '12px';
                 mediaContainer.appendChild(iframe);
-            
             }
+            // Проверяем ИЗОБРАЖЕНИЕ
+            else if (q.image && q.image.trim()) {
+                const imageData = q.image.trim();
+                console.log("📸 Пытаюсь загрузить изображение:", imageData.substring(0, 100) + "...");
+                
+                const img = document.createElement('img');
+                img.src = imageData;
+                img.alt = 'Изображение к вопросу';
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '50vh';
+                img.style.borderRadius = '12px';
+                img.style.objectFit = 'contain';
+                img.style.display = 'block';
+                img.style.margin = '0 auto';
 
+                img.onload = function() {
+                    console.log('✅ Изображение загружено успешно');
+                    mediaContainer.appendChild(img);
+                };
 
+                img.onerror = function() {
+                    console.error('❌ Ошибка загрузки изображения');
+                    mediaContainer.innerHTML = '';
+                    const fallback = document.createElement('div');
+                    fallback.style.color = '#ff6b6b';
+                    fallback.style.padding = '1rem';
+                    fallback.style.background = 'rgba(255,0,0,0.1)';
+                    fallback.style.borderRadius = '8px';
+                    fallback.textContent = '⚠️ Не удалось загрузить изображение. Попробуйте загрузить заново.';
+                    mediaContainer.appendChild(fallback);
+                };
 
-if (q.image) {
-
-    console.log("IMAGE =", q.image);
-
-    const img =
-        document.createElement('img');
-
-    img.src = q.image;
-
-    img.style.maxWidth = "100%";
-    img.style.maxHeight = "50vh";
-    img.style.objectFit = "contain";
-
-    img.onload = function () {
-
-        console.log("Картинка успешно загружена");
-
-    };
-
-    img.onerror = function () {
-
-        console.error("Ошибка загрузки картинки");
-
-        mediaContainer.innerHTML +=
-            "<div style='color:red'>⚠ Не удалось загрузить изображение</div>";
-
-    };
-
-    mediaContainer.appendChild(img);
+                // Добавляем изображение сразу
+                mediaContainer.appendChild(img);
+            }
+            // Если нет ни видео, ни изображения
+            else {
+                const placeholder = document.createElement('div');
+                placeholder.style.color = '#666';
+                placeholder.style.padding = '0.5rem';
+                placeholder.textContent = '📷 Нет изображения';
+                mediaContainer.appendChild(placeholder);
             }
 
             q.played = true;
