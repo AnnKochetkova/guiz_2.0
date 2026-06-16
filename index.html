@@ -1725,6 +1725,8 @@
             const correct = editCorrect.value.trim();
             const image = editImageUrl.value.trim();
             const video = editVideo.value.trim();
+            console.log("Сохраняю изображение:");
+            console.log(image.substring(0,100));
 
             if (!text && !correct && options.every(o => !o) && !image && !video) {
                 setQuestion(catIdx, valIdx, null);
@@ -1739,6 +1741,7 @@
                 video,
                 played: false,
             };
+            console.log(q);
             const existing = getQuestion(catIdx, valIdx);
             if (existing && existing.played) q.played = true;
             setQuestion(catIdx, valIdx, q);
@@ -1836,37 +1839,74 @@
             qsCorrectText.textContent = q.correct || 'Правильный ответ не указан';
 
             const mediaContainer = qsMedia;
-            mediaContainer.innerHTML = '';
+            mediaContainer.innerHTML = ''; 
             if (q.video && q.video.trim()) {
+
                 const url = q.video.trim();
+            
                 let embedUrl = url;
+            
                 if (url.includes('youtu.be/')) {
+            
                     const id = url.split('youtu.be/')[1]?.split('?')[0];
-                    if (id) embedUrl = 'https://www.youtube.com/embed/' + id;
-                } else if (url.includes('watch?v=')) {
-                    const id = url.split('v=')[1]?.split('&')[0];
-                    if (id) embedUrl = 'https://www.youtube.com/embed/' + id;
-                } else if (url.includes('/embed/')) {
-                    embedUrl = url;
+            
+                    if (id)
+                        embedUrl =
+                            'https://www.youtube.com/embed/' + id;
+            
                 }
-                const iframe = document.createElement('iframe');
+                else if (url.includes('watch?v=')) {
+            
+                    const id = url.split('v=')[1]?.split('&')[0];
+            
+                    if (id)
+                        embedUrl =
+                            'https://www.youtube.com/embed/' + id;
+            
+                }
+            
+                const iframe =
+                    document.createElement('iframe');
+            
                 iframe.src = embedUrl;
-                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            
                 iframe.allowFullscreen = true;
+            
                 mediaContainer.appendChild(iframe);
-            } else if (q.image && q.image.trim()) {
-                const img = document.createElement('img');
-                img.src = q.image.trim();
-                img.alt = 'Изображение к вопросу';
-                img.onerror = function() {
-                    this.style.display = 'none';
-                    const fallback = document.createElement('div');
-                    fallback.style.color = '#ff6b6b';
-                    fallback.style.padding = '1rem';
-                    fallback.textContent = '⚠️ Изображение не загрузилось. Ссылка: ' + q.image;
-                    mediaContainer.appendChild(fallback);
-                };
-                mediaContainer.appendChild(img);
+            
+            }
+
+
+
+if (q.image) {
+
+    console.log("IMAGE =", q.image);
+
+    const img =
+        document.createElement('img');
+
+    img.src = q.image;
+
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "50vh";
+    img.style.objectFit = "contain";
+
+    img.onload = function () {
+
+        console.log("Картинка успешно загружена");
+
+    };
+
+    img.onerror = function () {
+
+        console.error("Ошибка загрузки картинки");
+
+        mediaContainer.innerHTML +=
+            "<div style='color:red'>⚠ Не удалось загрузить изображение</div>";
+
+    };
+
+    mediaContainer.appendChild(img);
             }
 
             q.played = true;
